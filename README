@@ -1,11 +1,13 @@
+sharkzapper-Helper is based on Grooveshark Desktop Helper for Linux ( http://github.com/intarstudents/GSDesktop-Helper )
+
 === Dependencies ===
 aptitude install python-keybinder python-gtk2 python-gconf python
 
 === Usage (Ubuntu) ===
 $ cd ~
-$ git clone http://github.com/intarstudents/GSDesktop-Helper.git
+$ git clone http://github.com/adammw/sharkzapper-Helper.git
 
 Now Alt + F2 and in Run Application dialoge write:
-GSDesktop-Helper/helper.py
+sharkzapper-Helper/helper.py
 
 That's it!
