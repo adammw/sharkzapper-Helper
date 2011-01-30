@@ -8,16 +8,17 @@ import gtk
 import keybinder
 import ConfigParser
 import gconf
+import subprocess
 
 try:
   import dbus
   from dbus.mainloop.glib import DBusGMainLoop
 except: pass
 
-class GSDesktop_Helper:
+class sharkzapper_Helper:
   def __init__(self):
     
-    self._NAME    = "GSDesktop Helper"
+    self._NAME    = "sharkzapper Helper"
     self._VERSION = "0.4.4"
     self._AUTHORS = [
       "Intars Students\nhttp://intarstudents.lv/\n-----", 
@@ -41,56 +42,20 @@ class GSDesktop_Helper:
       
       error_msg.destroy()
       os._exit(0)
-    
-    # Find shortcutAction.txt file
-    self._appdata = None
-    self._homedir = "%s/.appdata" % os.path.expanduser('~')
-    
-    if os.path.exists(self._homedir):
-      self._appdata = os.listdir(self._homedir)
-      
-    self._shortcutAction = None
-    
-    if self._appdata != None:
-      for name in self._appdata:
-        m = re.match("^(GroovesharkDesktop[A-Z0-9\.]+)$", name)
-        
-        if m:
-          self._shortcutAction = "%s/%s/Local Store/shortcutAction.txt" % (self._homedir, m.group(0))
-          
-          if os.path.exists(self._shortcutAction):
-            break
-          else:
-            
-            # If shortcutAction.txt doesn't exist try to create it
-            try: open(self._shortcutAction, 'w').close()
-            except: pass
-            
-            if os.path.exists(self._shortcutAction):
-              break
-            else:
-              self._shortcutAction = None
-    
-    if not self._shortcutAction:
-      error_msg = gtk.MessageDialog(None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE, "Couldn't find shortcutAction.txt file!")
-      error_msg.run()
-      
-      error_msg.destroy()
-      os._exit(0)
-    
+       
     # Default list of all hotkeys and their actions
     self._defaults = {
       "next"            : "<Ctrl>period",         # Ctrl + .
       "previous"        : "<Ctrl>comma",          # Ctrl + ,
       "playpause"       : "<Ctrl>equal",          # Ctrl + =
-      "shuffle"         : "<Ctrl>grave",          # Ctrl + `
-      "radio"           : "<Super>grave",         # Super + `
-      "showsongtoast"   : "<Ctrl>slash",          # Ctrl + /
-      "togglefavorite"  : "<Ctrl>backslash",      # Ctrl + \
-      "togglesmile"     : "<Super>period",        # Super + .
-      "togglefrown"     : "<Super>comma",         # Super + ,
-      "volumeup"        : "<Ctrl><Alt>Page_Up",   # Ctrl + Alt + Page Up
-      "volumedown"      : "<Ctrl><Alt>Page_Down", # Ctrl + Alt + Page Down
+#      "shuffle"         : "<Ctrl>grave",          # Ctrl + `
+#      "radio"           : "<Super>grave",         # Super + `
+#      "showsongtoast"   : "<Ctrl>slash",          # Ctrl + /
+#      "togglefavorite"  : "<Ctrl>backslash",      # Ctrl + \
+#      "togglesmile"     : "<Super>period",        # Super + .
+#      "togglefrown"     : "<Super>comma",         # Super + ,
+#      "volumeup"        : "<Ctrl><Alt>Page_Up",   # Ctrl + Alt + Page Up
+#      "volumedown"      : "<Ctrl><Alt>Page_Down", # Ctrl + Alt + Page Down
     }
     
     # Load default from default hotkeys
@@ -105,14 +70,14 @@ class GSDesktop_Helper:
       ["next"           , ["Plays next song", "Play next"]],
       ["previous"       , ["Plays previous song", "Play previous"]],
       ["playpause"      , ["Toggles Play/Pause", "Play/Pause"]],
-      ["shuffle"        , ["Toggles Shuffle", "Shuffle"]],
-      ["radio"          , ["Toggles Radio", "Radio"]],
-      ["showsongtoast"  , ["Displays song info", "Show Song Info"]],
-      ["togglefavorite" , "Favorites song"],
-      ["togglesmile"    , "\"Smiles\" song"],
-      ["togglefrown"    , "\"Frowns\" song"],
-      ["volumeup"       , "Increases volume"],
-      ["volumedown"     , "Decreases volume"],
+#      ["shuffle"        , ["Toggles Shuffle", "Shuffle"]],
+#      ["radio"          , ["Toggles Radio", "Radio"]],
+#      ["showsongtoast"  , ["Displays song info", "Show Song Info"]],
+#      ["togglefavorite" , "Favorites song"],
+#      ["togglesmile"    , "\"Smiles\" song"],
+#      ["togglefrown"    , "\"Frowns\" song"],
+#      ["volumeup"       , "Increases volume"],
+#      ["volumedown"     , "Decreases volume"],
     ]
     
     # Try to enable multimedia keys (Gnome)
@@ -126,7 +91,7 @@ class GSDesktop_Helper:
     
     self.load_conf()
     self.bindKeys()
-    self.protocolHandler()
+    #self.protocolHandler()
     
     # Status icon stuff
     self._status_icon = gtk.StatusIcon()
@@ -174,7 +139,7 @@ class GSDesktop_Helper:
     # Look and feel of window
     self._window = gtk.Window(gtk.WINDOW_TOPLEVEL)
     self._window.set_title(self._NAME)
-    self._window.set_default_size(325, 350)
+    self._window.set_default_size(325, 200)#350
     self._window.set_icon_from_file(self._ICON)
     self._window.set_position(gtk.WIN_POS_CENTER_ALWAYS)
     self._window.set_border_width(10)
@@ -337,13 +302,20 @@ class GSDesktop_Helper:
   
   # Handle received hotkey action
   def keyboard_callback(self, toggle):
-    if os.path.exists(self._shortcutAction) and os.access(self._shortcutAction, os.W_OK):
-      try:
-        file = open(self._shortcutAction, "a")
-        file.write("%s\n" % toggle)
-        file.close()
-      except Exception, e:
-        print e
+    if toggle == "next":
+        toggle = "nextSong"
+    elif toggle == "previous":
+        toggle = "prevSong"
+    elif toggle == "playpause":
+        toggle = "togglePlayPause"
+    else:
+        print "Unhandled shortcut, " + toggle
+        toggle = None
+    if toggle:
+        try:
+            subprocess.call(["google-chrome","--app=chrome-extension://dcaneijaapiiojfmgmdjeapgpapbjohb/html/sharkzapper_externalcommand.html#" + toggle])
+        except Exception, e:
+            print e
   
   # Handle multimedia keys
   def MMKeys(self, *mmkeys):
@@ -399,7 +371,7 @@ class GSDesktop_Helper:
     
     about_dialog.set_version(self._VERSION)
     about_dialog.set_authors(self._AUTHORS)
-    about_dialog.set_website("http://grooveshark.wikia.com/wiki/GSDesktop_Global_Keyboard_Shortcuts")
+    about_dialog.set_website("http://sharkzapper.co.cc")
     about_dialog.set_website_label("How to groove?")
     
     icon = gtk.gdk.pixbuf_new_from_file(self._ICON)
@@ -409,4 +381,4 @@ class GSDesktop_Helper:
     about_dialog.destroy()
 
 if __name__ == '__main__':
-  GSDesktop_Helper()
+  sharkzapper_Helper()
