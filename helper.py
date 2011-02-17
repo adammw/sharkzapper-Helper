@@ -316,6 +316,12 @@ class sharkzapper_Helper:
             subprocess.call(["google-chrome","--app=chrome-extension://dcaneijaapiiojfmgmdjeapgpapbjohb/html/sharkzapper_externalcommand.html#" + toggle])
         except Exception, e:
             print e
+        try:
+            subprocess.call(["chromium-browser","--app=chrome-extension://dcaneijaapiiojfmgmdjeapgpapbjohb/html/sharkzapper_externalcommand.html#" + toggle])
+        except Exception, e:
+            print e
+
+
   
   # Handle multimedia keys
   def MMKeys(self, *mmkeys):
