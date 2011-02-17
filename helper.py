@@ -8,6 +8,7 @@ import gtk
 import keybinder
 import ConfigParser
 import gconf
+import gobject
 import subprocess
 
 try:
@@ -57,6 +58,13 @@ class sharkzapper_Helper:
 #      "volumeup"        : "<Ctrl><Alt>Page_Up",   # Ctrl + Alt + Page Up
 #      "volumedown"      : "<Ctrl><Alt>Page_Down", # Ctrl + Alt + Page Down
     }
+    
+    # Set default executable
+    self._defaultExecutables = [
+        "chromium-browser",
+        "google-chrome",
+    ]
+    self._executable = "google-chrome"
     
     # Load default from default hotkeys
     self._hotkeys = {}
@@ -121,6 +129,10 @@ class sharkzapper_Helper:
         if toggle in self._hotkeys.keys():
           self._hotkeys[toggle] = config.get("hotkeys", toggle)
           
+      for executable in config.options("executables"):
+        if executable == "browser":
+          self._executable = config.get("executables", executable)
+          
     except: pass
   
   # If possible, save to configuration file
@@ -132,6 +144,9 @@ class sharkzapper_Helper:
     
     for toggle in self._hotkeys:
       config.set("hotkeys", toggle, self._hotkeys[toggle])
+      
+    config.add_section("executables")
+    config.set("executables", "browser", self._executable)
       
     config.write(configFile)
   
@@ -214,6 +229,22 @@ class sharkzapper_Helper:
       table.set_row_spacing(row, 2)
       
       row += 1
+      
+    # Allow to configure executable
+    label = gtk.Label("Browser Executable:")
+    label.set_alignment(0, 0.5)
+    label.show()
+    table.attach(label, 1, 2, row, row + 1, xpadding=5)
+    
+    liststore = gtk.ListStore(gobject.TYPE_STRING)
+    entry = gtk.ComboBoxEntry(liststore, 0)
+    entry.child.set_text(self._executable)
+    for executable in self._defaultExecutables:
+        entry.append_text(executable)
+    #entry.connect("event", self.focus_toggle, toggle, entry)
+    entry.show()
+    table.attach(entry, 2, 3, row, row + 1)
+    self._executableEntry = entry.child
     
     table.show()
     self._confRowBox.pack_start(table)
@@ -274,6 +305,8 @@ class sharkzapper_Helper:
   
   # On window hide bind keys
   def hide_conf_window(self, window):
+    self._executable = self._executableEntry.get_text()
+    self.save_conf()
     self.bindKeys()
     self._window.hide()
   
@@ -313,11 +346,7 @@ class sharkzapper_Helper:
         toggle = None
     if toggle:
         try:
-            subprocess.call(["google-chrome","--app=chrome-extension://dcaneijaapiiojfmgmdjeapgpapbjohb/html/sharkzapper_externalcommand.html#" + toggle])
-        except Exception, e:
-            print e
-        try:
-            subprocess.call(["chromium-browser","--app=chrome-extension://dcaneijaapiiojfmgmdjeapgpapbjohb/html/sharkzapper_externalcommand.html#" + toggle])
+            subprocess.call([self._executable,"--app=chrome-extension://dcaneijaapiiojfmgmdjeapgpapbjohb/html/sharkzapper_externalcommand.html#" + toggle])
         except Exception, e:
             print e
 
