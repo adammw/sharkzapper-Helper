@@ -25,9 +25,10 @@ class sharkzapper_Helper:
       "Intars Students\nhttp://intarstudents.lv/\n-----", 
       "ppannuto\nhttp://umich.edu/~ppannuto/\n-----", 
       "Pedro Casagrande\nhttp://launchpad.net/~pccampos\n-----", 
-      "Icon by Thvg\nhttp://thvg.deviantart.com/"
+      "Icon by Thvg\nhttp://thvg.deviantart.com/",
+      "adammw111\nhttp://github.com/adammw"
     ]
-    self._INI     = os.path.expanduser('~')+"/.gsdesktop-helper"
+    self._INI     = os.path.expanduser('~')+"/.sharkzapper-helper"
     
     # Try to find icon file
     if os.path.exists("%s/gsd-helper.png" % sys.path[0]):
